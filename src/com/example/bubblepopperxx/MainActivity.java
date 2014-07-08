@@ -64,8 +64,6 @@ public class MainActivity extends Activity implements OnClickListener {
 		new Game().execute(charset);
 	}
 
-
-
 	public void setUIComponents() {
 		lLayout = (LinearLayout) findViewById(R.id.lLayout);
 
@@ -220,6 +218,7 @@ public class MainActivity extends Activity implements OnClickListener {
 		class ThreadWorker implements Runnable {
 			private volatile boolean isRunning = true;
 
+			@SuppressWarnings("finally")
 			@Override
 			public void run() {
 				// TODO Auto-generated method stub
@@ -234,12 +233,26 @@ public class MainActivity extends Activity implements OnClickListener {
 					xPos = yPos = yLimit = 0;
 					canvas = sfh.lockCanvas();
 					canvas.drawRGB(0, 0, 0);
-					setLimits();
-					/*
-					 * if(!setLimits()){ canvas.drawRGB(0, 0, 0);
-					 * canvas.drawText("time up....", 0, 0, paint);
-					 * setRunningState(false); break; }
-					 */
+					// setLimits();
+
+					if (!setLimits()) {
+						
+						try {
+							canvas.drawRGB(0, 0, 0);
+							canvas.drawText("time up....", 0,canvas.getHeight()/2, paint);
+							sfh.unlockCanvasAndPost(canvas);
+							Thread.sleep(2000);
+						} catch (InterruptedException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}finally{
+							setRunningState(false);
+							finish();
+							continue;
+						}
+						
+					}
+
 					for (String rItem : rList/* .subList(0, last) */) {
 						setPosition();
 						canvas.drawText(rItem, xPos, yPos, paint);
@@ -264,13 +277,19 @@ public class MainActivity extends Activity implements OnClickListener {
 				isRunning = state;
 			}
 
-			public void setLimits() {
-				if (xLimit >= (canvas.getWidth() - 20)) {
-					xLimit = (canvas.getWidth() - 20);
-				} else {
-					xLimit += 20;
-				}
+			/*
+			 * public void setLimits() { if (xLimit >= (canvas.getWidth() - 20))
+			 * { xLimit = (canvas.getWidth() - 20); } else { xLimit += 20; }
+			 * yLimit = canvas.getHeight() - 20; }
+			 */
+
+			public boolean setLimits() {
+				if (xLimit >= (canvas.getWidth() - 20)) 
+					return false;
+				
+				xLimit += 20;
 				yLimit = canvas.getHeight() - 20;
+				return true;
 			}
 
 			public void setPosition() {
