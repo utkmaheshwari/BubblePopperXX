@@ -49,6 +49,7 @@ public class MainActivity extends Activity implements OnClickListener {
 	public static final int numberOfCharacters = 10;
 	public static final int numberOfAlphabets = 26;
 	public volatile int last;
+	public volatile int score;
 
 	public NotificationManager nm;
 	public static final String[] charset = { "A", "B", "C", "D", "E", "F", "G",
@@ -103,10 +104,12 @@ public class MainActivity extends Activity implements OnClickListener {
 	}
 
 	private void actionAfterChecking(int index) {
-		if (index == (-1))
-			displayToast("wrong...");
-		else {
-			displayToast("" + rList.get(index).toString().trim() + " removed");
+		if (index == (-1)) {
+			displayToast("wrong...Score: " + score + " / " + numberOfCharacters);
+		} else {
+			score++;
+			displayToast("" + rList.get(index).toString().trim()
+					+ " removed.. Score: " + score + " / " + numberOfCharacters);
 			updateAndDisplaySurface(index);
 			// displayToast("correct....");
 		}
@@ -128,6 +131,7 @@ public class MainActivity extends Activity implements OnClickListener {
 	public void createAndDisplaySurface() {
 		xLimit = 40;
 		last = 0;
+		score = 0;
 		lLayout.addView(new AnimationSurface(getApplicationContext()), 0,
 				new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
 						ViewGroup.LayoutParams.MATCH_PARENT));
@@ -226,8 +230,10 @@ public class MainActivity extends Activity implements OnClickListener {
 				while (true) {
 					if (!isRunning)
 						break;
-					if (last > rList.size())
+
+					if (last >= rList.size())
 						last = rList.size();
+
 					else
 						++last;
 					xPos = yPos = yLimit = 0;
@@ -235,25 +241,45 @@ public class MainActivity extends Activity implements OnClickListener {
 					canvas.drawRGB(0, 0, 0);
 					// setLimits();
 
-					if (!setLimits()) {
-						
+					if (score == numberOfCharacters) {
 						try {
 							canvas.drawRGB(0, 0, 0);
-							canvas.drawText("time up....", 0,canvas.getHeight()/2, paint);
+							canvas.drawText("you Win....", 0,
+									canvas.getHeight() / 2, paint);
 							sfh.unlockCanvasAndPost(canvas);
 							Thread.sleep(2000);
 						} catch (InterruptedException e) {
 							// TODO Auto-generated catch block
 							e.printStackTrace();
-						}finally{
+						} finally {
 							setRunningState(false);
 							finish();
 							continue;
 						}
-						
 					}
 
-					for (String rItem : rList/* .subList(0, last) */) {
+					// setLimits();
+
+					if (!setLimits()) {
+
+						try {
+							canvas.drawRGB(0, 0, 0);
+							canvas.drawText("time up....", 0,
+									canvas.getHeight() / 2, paint);
+							sfh.unlockCanvasAndPost(canvas);
+							Thread.sleep(2000);
+						} catch (InterruptedException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						} finally {
+							setRunningState(false);
+							finish();
+							continue;
+						}
+
+					}
+
+					for (String rItem : rList.subList(0, last)) {
 						setPosition();
 						canvas.drawText(rItem, xPos, yPos, paint);
 					}
@@ -284,9 +310,9 @@ public class MainActivity extends Activity implements OnClickListener {
 			 */
 
 			public boolean setLimits() {
-				if (xLimit >= (canvas.getWidth() - 20)) 
+				if (xLimit >= (canvas.getWidth() - 20))
 					return false;
-				
+
 				xLimit += 20;
 				yLimit = canvas.getHeight() - 20;
 				return true;
