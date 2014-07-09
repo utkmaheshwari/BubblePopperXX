@@ -3,8 +3,6 @@ package com.example.bubblepopperxx;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 
-import com.example.bubblepopperxx.MainActivity.AnimationSurface.ThreadWorker;
-
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.app.Activity;
@@ -16,12 +14,10 @@ import android.content.Intent;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
-import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.Gravity;
 import android.view.Menu;
 import android.view.SurfaceHolder;
@@ -34,25 +30,25 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.bubblepopperxx.MainActivity.AnimationSurface.ThreadWorker;
+
 public class MainActivity extends Activity implements OnClickListener {
 
 	public Button[] bt;
 	public TextView tvScore, tvTime, tvLevel;
 	public Toast toast;
-	public Handler handler;
-	public Game game;
+	public Handler mainHandler;
 	public String character;
-	public String[] set;
 	public LinearLayout lLayout;
-	public int xLimit;
 	public volatile ArrayList<String> rList;
-	public Thread t;
+	public volatile ArrayList<Integer> xPos;
 	public ThreadWorker tworker;
-	public static final int numberOfCharacters = 10;
 	public static final int numberOfAlphabets = 26;
-	public volatile int last;
+	public volatile int maxErrors = 10;
+	public volatile int errors;
+	public volatile int total;
 	public volatile int score;
-
+	public SecureRandom random;
 	public NotificationManager nm;
 	public static final String[] charset = { "A", "B", "C", "D", "E", "F", "G",
 			"H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T",
@@ -63,8 +59,8 @@ public class MainActivity extends Activity implements OnClickListener {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
 		setUIComponents();
-		handler = new Handler();
-		new Game().execute(charset);
+		mainHandler = new Handler();
+		createAndDisplaySurface();
 	}
 
 	public void setUIComponents() {
@@ -84,7 +80,7 @@ public class MainActivity extends Activity implements OnClickListener {
 		}
 
 		tvLevel = (TextView) findViewById(R.id.level);
-		//tvTime = (TextView) findViewById(R.id.time);
+		// tvTime = (TextView) findViewById(R.id.time);
 		tvScore = (TextView) findViewById(R.id.score);
 
 		nm = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
@@ -111,20 +107,12 @@ public class MainActivity extends Activity implements OnClickListener {
 
 	private void actionAfterChecking(int index) {
 		if (index == (-1)) {
-			tvScore.setText("wrong...Score: " + score + " / "
-					+ numberOfCharacters);
-			// displayToast("wrong...Score: " + score + " / " +
-			// numberOfCharacters);
+			++errors;
+			displayToast("wrong...");
 		} else {
 			score++;
-			tvScore.setText("" + rList.get(index).toString().trim()
-					+ " removed.. Score: " + score + " / " + numberOfCharacters);
-			/*
-			 * displayToast("" + rList.get(index).toString().trim() +
-			 * " removed.. Score: " + score + " / " + numberOfCharacters);
-			 */
+			displayToast(rList.get(index).toString().trim() + " removed...");
 			updateAndDisplaySurface(index);
-			// displayToast("correct....");
 		}
 	}
 
@@ -142,37 +130,15 @@ public class MainActivity extends Activity implements OnClickListener {
 	}
 
 	public void createAndDisplaySurface() {
-		xLimit = 40;
-		last = 0;
-		score = 0;
+		rList = new ArrayList<String>();
+		xPos = new ArrayList<Integer>();
+		random = new SecureRandom();
+		displayToast("starting....");
+		score = total = errors = 0;
 		lLayout.addView(new AnimationSurface(getApplicationContext()), 0,
 				new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
 						ViewGroup.LayoutParams.MATCH_PARENT));
 
-	}
-
-	class Game extends AsyncTask<String, Integer, ArrayList<String>> {
-		@Override
-		protected void onPreExecute() {
-			// TODO Auto-generated method stub
-			super.onPreExecute();
-			displayToast("starting....");
-			keyboardRandomizer();
-		}
-
-		@Override
-		protected ArrayList<String> doInBackground(String... arg0) {
-			// TODO Auto-generated method stub
-			produceRandomString();
-			return null;
-		}
-
-		@Override
-		protected void onPostExecute(ArrayList<String> result) {
-			// TODO Auto-generated method stub
-			super.onPostExecute(result);
-			createAndDisplaySurface();
-		}
 	}
 
 	class AnimationSurface extends SurfaceView implements
@@ -180,16 +146,13 @@ public class MainActivity extends Activity implements OnClickListener {
 
 		public SurfaceHolder sfh;
 		public Canvas canvas;
-		public SecureRandom scr;
 		public Paint paint;
-		public int yLimit, xPos, yPos;
+		public int yPos;
 
 		public AnimationSurface(Context context) {
 			super(context);
 			// TODO Auto-generated constructor stub
 			sfh = getHolder();
-			// c=sfh.lockCanvas();
-			scr = new SecureRandom();
 			paint = new Paint();
 			paint.setColor(Color.WHITE);
 			paint.setAntiAlias(true);
@@ -201,8 +164,6 @@ public class MainActivity extends Activity implements OnClickListener {
 			super(context, attrs);
 			// TODO Auto-generated constructor stub
 			sfh = getHolder();
-
-			scr = new SecureRandom();
 			paint = new Paint();
 			paint.setColor(Color.WHITE);
 			paint.setAntiAlias(true);
@@ -221,8 +182,7 @@ public class MainActivity extends Activity implements OnClickListener {
 		public void surfaceCreated(SurfaceHolder holder) {
 			// TODO Auto-generated method stub
 			tworker = new ThreadWorker();
-			t = new Thread(tworker);
-			t.start();
+			new Thread(tworker).start();
 		}
 
 		@Override
@@ -232,69 +192,69 @@ public class MainActivity extends Activity implements OnClickListener {
 			sfh.removeCallback(this);
 		}
 
+		@TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
 		class ThreadWorker implements Runnable {
 			private volatile boolean isRunning = true;
 
+			@Override
+			protected void finalize() throws Throwable {
+				// TODO Auto-generated method stub
+				super.finalize();
+				sfh.getSurface().release();
+			}
+			
+			@TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
+			@SuppressLint("NewApi")
 			@SuppressWarnings("finally")
 			@Override
+			
+			
+
 			public void run() {
 				// TODO Auto-generated method stub
-
 				while (true) {
 					if (!isRunning)
 						break;
 
-					if (last >= rList.size())
-						last = rList.size();
+					rList.add(produceRandomCharacter());
+					++total;
+					mainHandler.post(new Runnable() {
 
-					else
-						++last;
-					xPos = yPos = yLimit = 0;
+						@Override
+						public void run() {
+							// TODO Auto-generated method stub
+							keyboardRandomizer();
+							tvScore.setText(score + " / " + total);
+						}
+					});
+
+					xPos.add(0);
+					yPos = 0;
 					canvas = sfh.lockCanvas();
 					canvas.drawRGB(0, 0, 0);
-					// setLimits();
+					if (errors >= maxErrors) {
 
-					if (score == numberOfCharacters) {
 						try {
-							canvas.drawRGB(0, 0, 0);
-							canvas.drawText("you Win....", 0,
+							canvas.drawText(
+									"you did 10 errors you lose........", 0,
 									canvas.getHeight() / 2, paint);
+							setRunningState(false);
 							sfh.unlockCanvasAndPost(canvas);
 							Thread.sleep(2000);
 						} catch (InterruptedException e) {
 							// TODO Auto-generated catch block
 							e.printStackTrace();
 						} finally {
-							setRunningState(false);
 							finish();
 							continue;
 						}
 					}
-
-					// setLimits();
-
-					if (!setLimits()) {
-
-						try {
-							canvas.drawRGB(0, 0, 0);
-							canvas.drawText("time up....", 0,
-									canvas.getHeight() / 2, paint);
-							sfh.unlockCanvasAndPost(canvas);
-							Thread.sleep(2000);
-						} catch (InterruptedException e) {
-							// TODO Auto-generated catch block
-							e.printStackTrace();
-						} finally {
-							setRunningState(false);
-							finish();
-							continue;
+					for (int i = 0; i < rList.size(); ++i) {
+						if (!setPosition(i)) {
+							rList.remove(i);
+							xPos.remove(i);
 						}
-
-					}
-
-					for (String rItem : rList.subList(0, last)) {
-						setPosition();
-						canvas.drawText(rItem, xPos, yPos, paint);
+						canvas.drawText(rList.get(i), xPos.get(i), yPos, paint);
 					}
 					sfh.unlockCanvasAndPost(canvas);
 
@@ -305,13 +265,14 @@ public class MainActivity extends Activity implements OnClickListener {
 						e.printStackTrace();
 					} finally {
 						// canvas.drawRGB(255, 0, 0);
+						
 						if (!isRunning)
 							break;
 					}
-
 				}
 			}
 
+			
 			public void setRunningState(boolean state) {
 				isRunning = state;
 			}
@@ -322,18 +283,13 @@ public class MainActivity extends Activity implements OnClickListener {
 			 * yLimit = canvas.getHeight() - 20; }
 			 */
 
-			public boolean setLimits() {
-				if (xLimit >= (canvas.getWidth() - 20))
+			public boolean setPosition(int i) {
+				if (xPos.get(i) >= (canvas.getWidth() - 20))
 					return false;
 
-				xLimit += 20;
-				yLimit = canvas.getHeight() - 20;
+				xPos.set(i, xPos.get(i) + 20);
+				yPos = random.nextInt(canvas.getHeight() - 40) + 20;
 				return true;
-			}
-
-			public void setPosition() {
-				xPos = scr.nextInt(xLimit);
-				yPos = scr.nextInt(yLimit);
 			}
 		}
 	}
@@ -345,7 +301,7 @@ public class MainActivity extends Activity implements OnClickListener {
 				Toast.LENGTH_SHORT);
 		toast.setGravity(Gravity.TOP | Gravity.RIGHT, 0, 0);
 		toast.show();
-		handler.postDelayed(new Runnable() {
+		mainHandler.postDelayed(new Runnable() {
 
 			@Override
 			public void run() {
@@ -355,19 +311,14 @@ public class MainActivity extends Activity implements OnClickListener {
 		}, 1000);
 	}
 
-	public void produceRandomString() {
-		SecureRandom r = new SecureRandom();
-		rList = new ArrayList<String>();
-		for (int i = 0; i < numberOfCharacters; ++i) {
-			rList.add(charset[r.nextInt(charset.length)]);
-			Log.i("random", rList.get(i));
-		}
+	public String produceRandomCharacter() {
+		return charset[random.nextInt(charset.length)];
+
 	}
 
 	public void keyboardRandomizer() {
-		SecureRandom r = new SecureRandom();
 		for (int i = 1; i < numberOfAlphabets; ++i) {
-			int j = r.nextInt(i);
+			int j = random.nextInt(i);
 			String letter = ((Button) bt[i]).getText().toString();
 			bt[i].setText(((Button) bt[j]).getText().toString());
 			bt[j].setText(letter);
