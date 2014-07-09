@@ -31,11 +31,13 @@ import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.LinearLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 
 public class MainActivity extends Activity implements OnClickListener {
 
 	public Button[] bt;
+	public TextView tvScore, tvTime, tvLevel;
 	public Toast toast;
 	public Handler handler;
 	public Game game;
@@ -81,6 +83,10 @@ public class MainActivity extends Activity implements OnClickListener {
 			bt[i].setOnClickListener(this);
 		}
 
+		tvLevel = (TextView) findViewById(R.id.level);
+		//tvTime = (TextView) findViewById(R.id.time);
+		tvScore = (TextView) findViewById(R.id.score);
+
 		nm = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
 		nm.cancel(123);
 
@@ -105,11 +111,18 @@ public class MainActivity extends Activity implements OnClickListener {
 
 	private void actionAfterChecking(int index) {
 		if (index == (-1)) {
-			displayToast("wrong...Score: " + score + " / " + numberOfCharacters);
+			tvScore.setText("wrong...Score: " + score + " / "
+					+ numberOfCharacters);
+			// displayToast("wrong...Score: " + score + " / " +
+			// numberOfCharacters);
 		} else {
 			score++;
-			displayToast("" + rList.get(index).toString().trim()
+			tvScore.setText("" + rList.get(index).toString().trim()
 					+ " removed.. Score: " + score + " / " + numberOfCharacters);
+			/*
+			 * displayToast("" + rList.get(index).toString().trim() +
+			 * " removed.. Score: " + score + " / " + numberOfCharacters);
+			 */
 			updateAndDisplaySurface(index);
 			// displayToast("correct....");
 		}

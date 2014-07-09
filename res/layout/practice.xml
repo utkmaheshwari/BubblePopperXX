@@ -10,12 +10,15 @@
     android:weightSum="3"
     tools:context=".MainActivity" >
 
+  
+
     <LinearLayout
         android:id="@+id/lLayout"
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
         android:layout_weight="1"
-        android:orientation="vertical" >
+        android:orientation="vertical"
+        android:saveEnabled="true" >
     </LinearLayout>
 
     <LinearLayout
@@ -23,29 +26,6 @@
         android:layout_height="fill_parent"
         android:layout_weight="2"
         android:orientation="vertical" >
-
-        <LinearLayout
-            android:layout_width="fill_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:weightSum="3" >
-
-            <TextView
-                android:id="@+id/score"
-                android:layout_width="fill_parent"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center_horizontal"
-                android:layout_weight="1"
-                android:text="Score" />
-
-            <TextView
-                android:id="@+id/level"
-                android:layout_width="fill_parent"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center_horizontal"
-                android:layout_weight="2"
-                android:text="Level 1" />
-        </LinearLayout>
 
         <LinearLayout
             android:layout_width="fill_parent"
@@ -127,11 +107,20 @@
         </LinearLayout>
 
         <LinearLayout
-            android:layout_width="fill_parent"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="fill_horizontal"
             android:orientation="horizontal"
-            android:weightSum="9" >
+            android:layout_gravity="fill_horizontal"
+            android:weightSum="12" >
+
+            <Button
+                android:id="@+id/btx"
+                style="?android:attr/buttonStyleSmall"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:layout_weight="2"
+                android:text=""
+                android:visibility="invisible" />
 
             <Button
                 android:id="@+id/bt10"
@@ -166,15 +155,6 @@
                 android:text="N" />
 
             <Button
-                android:id="@+id/btx"
-                style="?android:attr/buttonStyleSmall"
-                android:layout_width="fill_parent"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="0"
-                android:visibility="invisible" />
-
-            <Button
                 android:id="@+id/bt14"
                 style="?android:attr/buttonStyleSmall"
                 android:layout_width="fill_parent"
@@ -205,6 +185,15 @@
                 android:layout_height="match_parent"
                 android:layout_weight="1"
                 android:text="R" />
+
+            <Button
+                android:id="@+id/bty"
+                style="?android:attr/buttonStyleSmall"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:layout_weight="2"
+                android:text=""
+                android:visibility="invisible" />
         </LinearLayout>
 
         <LinearLayout
