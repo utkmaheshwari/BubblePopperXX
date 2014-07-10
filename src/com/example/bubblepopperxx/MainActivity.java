@@ -45,6 +45,9 @@ public class MainActivity extends Activity implements OnClickListener {
 	public ThreadWorker tworker;
 	public static final int numberOfAlphabets = 26;
 	public volatile int maxErrors = 10;
+	public volatile boolean isRunning = true;
+	public volatile boolean shutDown = false;
+	public volatile int checkResult = -1;
 	public volatile int errors;
 	public volatile int total;
 	public volatile int score;
@@ -121,12 +124,19 @@ public class MainActivity extends Activity implements OnClickListener {
 	}
 
 	public void updateAndDisplaySurface(int index) {
-		tworker.setRunningState(false);
-		rList.remove(index);
-		lLayout.removeAllViews();
-		lLayout.addView(new AnimationSurface(getApplicationContext()), 0,
-				new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
-						ViewGroup.LayoutParams.MATCH_PARENT));
+		isRunning = false;
+		synchronized (rList) {
+			rList.remove(index);
+			xPos.remove(index);
+		}
+
+		isRunning = true;
+		/*
+		 * lLayout.removeAllViews(); lLayout.addView(new
+		 * AnimationSurface(getApplicationContext()), 0, new
+		 * ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
+		 * ViewGroup.LayoutParams.MATCH_PARENT));
+		 */
 	}
 
 	public void createAndDisplaySurface() {
@@ -188,13 +198,12 @@ public class MainActivity extends Activity implements OnClickListener {
 		@Override
 		public void surfaceDestroyed(SurfaceHolder holder) {
 			// TODO Auto-generated method stub
-			tworker.setRunningState(false);
+			shutDown = true;
 			sfh.removeCallback(this);
 		}
 
 		@TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
 		class ThreadWorker implements Runnable {
-			private volatile boolean isRunning = true;
 
 			@Override
 			protected void finalize() throws Throwable {
@@ -202,21 +211,22 @@ public class MainActivity extends Activity implements OnClickListener {
 				super.finalize();
 				sfh.getSurface().release();
 			}
-			
+
 			@TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
 			@SuppressLint("NewApi")
 			@SuppressWarnings("finally")
 			@Override
-			
-			
-
 			public void run() {
 				// TODO Auto-generated method stub
 				while (true) {
-					if (!isRunning)
+					if (shutDown)
 						break;
 
+					while (!isRunning);
+
 					rList.add(produceRandomCharacter());
+					xPos.add(0);
+
 					++total;
 					mainHandler.post(new Runnable() {
 
@@ -228,7 +238,6 @@ public class MainActivity extends Activity implements OnClickListener {
 						}
 					});
 
-					xPos.add(0);
 					yPos = 0;
 					canvas = sfh.lockCanvas();
 					canvas.drawRGB(0, 0, 0);
@@ -238,7 +247,7 @@ public class MainActivity extends Activity implements OnClickListener {
 							canvas.drawText(
 									"you did 10 errors you lose........", 0,
 									canvas.getHeight() / 2, paint);
-							setRunningState(false);
+							shutDown = true;
 							sfh.unlockCanvasAndPost(canvas);
 							Thread.sleep(2000);
 						} catch (InterruptedException e) {
@@ -259,22 +268,12 @@ public class MainActivity extends Activity implements OnClickListener {
 					sfh.unlockCanvasAndPost(canvas);
 
 					try {
-						Thread.sleep(2000);
+						Thread.sleep(3000);
 					} catch (InterruptedException e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
-					} finally {
-						// canvas.drawRGB(255, 0, 0);
-						
-						if (!isRunning)
-							break;
 					}
 				}
-			}
-
-			
-			public void setRunningState(boolean state) {
-				isRunning = state;
 			}
 
 			/*
