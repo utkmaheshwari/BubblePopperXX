@@ -22,7 +22,8 @@
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
         android:layout_weight="2"
-        android:orientation="vertical" >
+        android:orientation="vertical" 
+        android:textColorHighlight="@android:color/transparent">
 
         <LinearLayout
             android:layout_width="fill_parent"
@@ -51,160 +52,155 @@
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
+            android:layout_gravity="center_horizontal"
             android:weightSum="9" >
 
-            <Button
-                android:id="@+id/bt1"
-                style="?android:attr/buttonStyleSmall"
+            <TextView
+                android:id="@+id/tv1"
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="A" />
+                android:text="Q"
+                android:textAppearance="?android:attr/textAppearanceLarge" />
 
-            <Button
-                android:id="@+id/bt2"
-                style="?android:attr/buttonStyleSmall"
+            <TextView
+                android:id="@+id/tv2"
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="B" />
+                android:text="W"
+                
+                android:textAppearance="?android:attr/textAppearanceLarge" />
 
-            <Button
-                android:id="@+id/bt3"
-                style="?android:attr/buttonStyleSmall"
+            <TextView
+                android:id="@+id/tv3"
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="C" />
+                android:text="E"
+                android:textAppearance="?android:attr/textAppearanceLarge" />
 
-            <Button
-                android:id="@+id/bt4"
-                style="?android:attr/buttonStyleSmall"
+            <TextView
+                android:id="@+id/tv4"
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="D" />
+                android:text="R"
+                android:textAppearance="?android:attr/textAppearanceLarge" />
 
-            <Button
-                android:id="@+id/bt5"
-                style="?android:attr/buttonStyleSmall"
+            <TextView
+                android:id="@+id/tv5"
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="E" />
+                android:text="T"
+                android:textAppearance="?android:attr/textAppearanceLarge" />
 
-            <Button
-                android:id="@+id/bt6"
-                style="?android:attr/buttonStyleSmall"
+            <TextView
+                android:id="@+id/tv6"
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="F" />
+                android:text="Y"
+                android:textAppearance="?android:attr/textAppearanceLarge" />
 
-            <Button
-                android:id="@+id/bt7"
-                style="?android:attr/buttonStyleSmall"
+            <TextView
+                android:id="@+id/tv7"
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="G" />
+                android:text="U"
+                android:textAppearance="?android:attr/textAppearanceLarge" />
 
-            <Button
-                android:id="@+id/bt8"
-                style="?android:attr/buttonStyleSmall"
+            <TextView
+                android:id="@+id/tv8"
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="H" />
+                android:text="I"
+                android:textAppearance="?android:attr/textAppearanceLarge" />
 
-            <Button
-                android:id="@+id/bt9"
-                style="?android:attr/buttonStyleSmall"
+            <TextView
+                android:id="@+id/tv9"
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="I" />
+                android:text="O"
+                android:textAppearance="?android:attr/textAppearanceLarge" />
         </LinearLayout>
 
         <LinearLayout
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
-            android:layout_gravity="fill_horizontal"
+            android:layout_gravity="center_horizontal"
             android:orientation="horizontal"
-            android:weightSum="9" >
+            android:weightSum="8" >
 
-            <Button
-                android:id="@+id/bt10"
-                style="?android:attr/buttonStyleSmall"
+            <TextView
+                android:id="@+id/tv10"
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="K" />
+                android:text="P"
+                android:textAppearance="?android:attr/textAppearanceLarge" />
 
-            <Button
-                android:id="@+id/bt11"
-                style="?android:attr/buttonStyleSmall"
+            <TextView
+                android:id="@+id/tv11"
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="L" />
+                android:text="A"
+                android:textAppearance="?android:attr/textAppearanceLarge" />
 
-            <Button
-                android:id="@+id/bt12"
-                style="?android:attr/buttonStyleSmall"
+            <TextView
+                android:id="@+id/tv12"
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="M" />
+                android:text="S"
+                android:textAppearance="?android:attr/textAppearanceLarge" />
 
-            <Button
-                android:id="@+id/bt13"
-                style="?android:attr/buttonStyleSmall"
+            <TextView
+                android:id="@+id/tv13"
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="N" />
+                android:text="D"
+                android:textAppearance="?android:attr/textAppearanceLarge" />
 
-            <Button
-                android:id="@+id/btx"
-                style="?android:attr/buttonStyleSmall"
+            
+
+            <TextView
+                android:id="@+id/tv14"
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="0"
-                android:visibility="invisible" />
+                android:text="F"
+                android:textAppearance="?android:attr/textAppearanceLarge" />
 
-            <Button
-                android:id="@+id/bt14"
-                style="?android:attr/buttonStyleSmall"
+            <TextView
+                android:id="@+id/tv15"
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="O" />
+                android:text="G"
+                android:textAppearance="?android:attr/textAppearanceLarge" />
 
-            <Button
-                android:id="@+id/bt15"
-                style="?android:attr/buttonStyleSmall"
+            <TextView
+                android:id="@+id/tv16"
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="P" />
+                android:text="H"
+                android:textAppearance="?android:attr/textAppearanceLarge" />
 
-            <Button
-                android:id="@+id/bt16"
-                style="?android:attr/buttonStyleSmall"
+            <TextView
+                android:id="@+id/tv17"
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Q" />
-
-            <Button
-                android:id="@+id/bt17"
-                style="?android:attr/buttonStyleSmall"
-                android:layout_width="fill_parent"
-                android:layout_height="match_parent"
-                android:layout_weight="1"
-                android:text="R" />
+                android:text="J"
+                android:textAppearance="?android:attr/textAppearanceLarge" />
         </LinearLayout>
 
         <LinearLayout
@@ -213,77 +209,77 @@
             android:orientation="horizontal"
             android:weightSum="9" >
 
-            <Button
-                android:id="@+id/bt18"
-                style="?android:attr/buttonStyleSmall"
+           <TextView
+                android:id="@+id/tv18"
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="S" />
+                android:text="K"
+                android:textAppearance="?android:attr/textAppearanceLarge" />
 
-            <Button
-                android:id="@+id/bt19"
-                style="?android:attr/buttonStyleSmall"
+            <TextView
+                android:id="@+id/tv19"
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="T" />
+                android:text="L"
+                android:textAppearance="?android:attr/textAppearanceLarge" />
 
-            <Button
-                android:id="@+id/bt20"
-                style="?android:attr/buttonStyleSmall"
-                android:layout_width="fill_parent"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="U" />
+           
 
-            <Button
-                android:id="@+id/bt21"
-                style="?android:attr/buttonStyleSmall"
+            <TextView
+                android:id="@+id/tv20"
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="V" />
+                android:text="Z"
+                android:textAppearance="?android:attr/textAppearanceLarge" />
 
-            <Button
-                android:id="@+id/bt22"
-                style="?android:attr/buttonStyleSmall"
+            <TextView
+                android:id="@+id/tv21"
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="W" />
+                android:text="X"
+                android:textAppearance="?android:attr/textAppearanceLarge" />
 
-            <Button
-                android:id="@+id/bt23"
-                style="?android:attr/buttonStyleSmall"
+            <TextView
+                android:id="@+id/tv22"
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="X" />
+                android:text="C"
+                android:textAppearance="?android:attr/textAppearanceLarge" />
 
-            <Button
-                android:id="@+id/bt24"
-                style="?android:attr/buttonStyleSmall"
+            <TextView
+                android:id="@+id/tv23"
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Y" />
+                android:text="V"
+                android:textAppearance="?android:attr/textAppearanceLarge" />
 
-            <Button
-                android:id="@+id/bt25"
-                style="?android:attr/buttonStyleSmall"
+            <TextView
+                android:id="@+id/tv24"
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Z" />
-
-            <Button
-                android:id="@+id/bt26"
-                style="?android:attr/buttonStyleSmall"
+                android:text="B"
+                android:textAppearance="?android:attr/textAppearanceLarge" />
+             <TextView
+                android:id="@+id/tv25"
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="J" />
+                android:text="N"
+                android:textAppearance="?android:attr/textAppearanceLarge" />
+              <TextView
+                android:id="@+id/tv26"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="M"
+                android:textAppearance="?android:attr/textAppearanceLarge" />
         </LinearLayout>
     </LinearLayout>
 

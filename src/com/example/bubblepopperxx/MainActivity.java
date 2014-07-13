@@ -2,6 +2,7 @@ package com.example.bubblepopperxx;
 
 import java.security.SecureRandom;
 import java.util.ArrayList;
+import java.util.concurrent.locks.ReentrantLock;
 
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
@@ -14,35 +15,30 @@ import android.content.Intent;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.media.SoundPool;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.AttributeSet;
 import android.view.Gravity;
-import android.view.Menu;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.example.bubblepopperxx.MainActivity.AnimationSurface.ThreadWorker;
-
 public class MainActivity extends Activity implements OnClickListener {
 
-	public Button[] bt;
+	public TextView tv[];
 	public TextView tvScore, tvTime, tvLevel;
 	public Toast toast;
 	public Handler mainHandler;
-	public String character;
 	public LinearLayout lLayout;
 	public volatile ArrayList<String> rList;
 	public volatile ArrayList<Integer> xPos;
-	public ThreadWorker tworker;
 	public static final int numberOfAlphabets = 26;
 	public volatile int maxErrors = 10;
 	public volatile boolean isRunning = true;
@@ -53,9 +49,12 @@ public class MainActivity extends Activity implements OnClickListener {
 	public volatile int score;
 	public SecureRandom random;
 	public NotificationManager nm;
+	public Thread t;
 	public static final String[] charset = { "A", "B", "C", "D", "E", "F", "G",
 			"H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T",
 			"U", "V", "W", "X", "Y", "Z" };
+	public SoundPool soundpool;
+	public ReentrantLock globalLock;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -69,43 +68,33 @@ public class MainActivity extends Activity implements OnClickListener {
 	public void setUIComponents() {
 		lLayout = (LinearLayout) findViewById(R.id.lLayout);
 
-		bt = new Button[26];
-		final int[] buttonId = { R.id.bt1, R.id.bt2, R.id.bt3, R.id.bt4,
-				R.id.bt5, R.id.bt6, R.id.bt7, R.id.bt8, R.id.bt9, R.id.bt10,
-				R.id.bt11, R.id.bt12, R.id.bt13, R.id.bt14, R.id.bt15,
-				R.id.bt16, R.id.bt17, R.id.bt18, R.id.bt19, R.id.bt20,
-				R.id.bt21, R.id.bt22, R.id.bt23, R.id.bt24, R.id.bt25,
-				R.id.bt26 };
+		tv = new TextView[numberOfAlphabets];
+		final int[] textViewId = { R.id.tv1, R.id.tv2, R.id.tv3, R.id.tv4,
+				R.id.tv5, R.id.tv6, R.id.tv7, R.id.tv8, R.id.tv9, R.id.tv10,
+				R.id.tv11, R.id.tv12, R.id.tv13, R.id.tv14, R.id.tv15,
+				R.id.tv16, R.id.tv17, R.id.tv18, R.id.tv19, R.id.tv20,
+				R.id.tv21, R.id.tv22, R.id.tv23, R.id.tv24, R.id.tv25,
+				R.id.tv26 };
 
-		for (int i = 0; i < 26; ++i) {
-			bt[i] = (Button) findViewById(buttonId[i]);
-			bt[i].setOnClickListener(this);
+		for (int i = 0; i < numberOfAlphabets; ++i) {
+			tv[i] = (TextView) findViewById(textViewId[i]);
+			tv[i].setOnClickListener(this);
 		}
 
 		tvLevel = (TextView) findViewById(R.id.level);
 		// tvTime = (TextView) findViewById(R.id.time);
 		tvScore = (TextView) findViewById(R.id.score);
-
 		nm = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
 		nm.cancel(123);
-
-	}
-
-	@Override
-	public boolean onCreateOptionsMenu(Menu menu) {
-		// Inflate the menu; this adds items to the action bar if it is present.
-		getMenuInflater().inflate(R.menu.main, menu);
-		return true;
 	}
 
 	@Override
 	public void onClick(View v) {
 		// TODO Auto-generated method stub
-
-		character = ((Button) v).getText().toString();
-		actionAfterChecking(check(character));
-		keyboardRandomizer();
-
+		// soundpool.play(soundID, leftVolume, rightVolume, priority, loop,
+		// rate);
+		TextView tvX = (TextView) v;
+		actionAfterChecking(check(tvX.getText().toString()));
 	}
 
 	private void actionAfterChecking(int index) {
@@ -115,7 +104,7 @@ public class MainActivity extends Activity implements OnClickListener {
 		} else {
 			score++;
 			displayToast(rList.get(index).toString().trim() + " removed...");
-			updateAndDisplaySurface(index);
+			updateSurface(index);
 		}
 	}
 
@@ -123,20 +112,15 @@ public class MainActivity extends Activity implements OnClickListener {
 		return (rList.indexOf(character));
 	}
 
-	public void updateAndDisplaySurface(int index) {
+	public void updateSurface(int index) {
 		isRunning = false;
 		synchronized (rList) {
 			rList.remove(index);
+		}
+		synchronized (xPos) {
 			xPos.remove(index);
 		}
-
 		isRunning = true;
-		/*
-		 * lLayout.removeAllViews(); lLayout.addView(new
-		 * AnimationSurface(getApplicationContext()), 0, new
-		 * ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
-		 * ViewGroup.LayoutParams.MATCH_PARENT));
-		 */
 	}
 
 	public void createAndDisplaySurface() {
@@ -148,7 +132,6 @@ public class MainActivity extends Activity implements OnClickListener {
 		lLayout.addView(new AnimationSurface(getApplicationContext()), 0,
 				new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
 						ViewGroup.LayoutParams.MATCH_PARENT));
-
 	}
 
 	class AnimationSurface extends SurfaceView implements
@@ -158,6 +141,7 @@ public class MainActivity extends Activity implements OnClickListener {
 		public Canvas canvas;
 		public Paint paint;
 		public int yPos;
+		public ReentrantLock lock;
 
 		public AnimationSurface(Context context) {
 			super(context);
@@ -168,6 +152,7 @@ public class MainActivity extends Activity implements OnClickListener {
 			paint.setAntiAlias(true);
 			paint.setTextSize(15);
 			sfh.addCallback(this);
+			lock = new ReentrantLock();
 		}
 
 		public AnimationSurface(Context context, AttributeSet attrs) {
@@ -191,8 +176,8 @@ public class MainActivity extends Activity implements OnClickListener {
 		@Override
 		public void surfaceCreated(SurfaceHolder holder) {
 			// TODO Auto-generated method stub
-			tworker = new ThreadWorker();
-			new Thread(tworker).start();
+			t = new Thread(new ThreadWorker());
+			t.start();
 		}
 
 		@Override
@@ -212,8 +197,6 @@ public class MainActivity extends Activity implements OnClickListener {
 				sfh.getSurface().release();
 			}
 
-			@TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
-			@SuppressLint("NewApi")
 			@SuppressWarnings("finally")
 			@Override
 			public void run() {
@@ -222,14 +205,13 @@ public class MainActivity extends Activity implements OnClickListener {
 					if (shutDown)
 						break;
 
-					while (!isRunning);
+					while (!isRunning)
+						;
 
 					rList.add(produceRandomCharacter());
 					xPos.add(0);
-
 					++total;
 					mainHandler.post(new Runnable() {
-
 						@Override
 						public void run() {
 							// TODO Auto-generated method stub
@@ -268,19 +250,13 @@ public class MainActivity extends Activity implements OnClickListener {
 					sfh.unlockCanvasAndPost(canvas);
 
 					try {
-						Thread.sleep(3000);
+						Thread.sleep(2000);
 					} catch (InterruptedException e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
 					}
 				}
 			}
-
-			/*
-			 * public void setLimits() { if (xLimit >= (canvas.getWidth() - 20))
-			 * { xLimit = (canvas.getWidth() - 20); } else { xLimit += 20; }
-			 * yLimit = canvas.getHeight() - 20; }
-			 */
 
 			public boolean setPosition(int i) {
 				if (xPos.get(i) >= (canvas.getWidth() - 20))
@@ -294,7 +270,6 @@ public class MainActivity extends Activity implements OnClickListener {
 	}
 
 	public void displayToast(final String result) {
-
 		// TODO Auto-generated method stub
 		toast = Toast.makeText(getApplicationContext(), result,
 				Toast.LENGTH_SHORT);
@@ -307,27 +282,25 @@ public class MainActivity extends Activity implements OnClickListener {
 				// TODO Auto-generated method stub
 				toast.cancel();
 			}
-		}, 1000);
+		}, 800);
 	}
 
 	public String produceRandomCharacter() {
 		return charset[random.nextInt(charset.length)];
-
 	}
 
 	public void keyboardRandomizer() {
 		for (int i = 1; i < numberOfAlphabets; ++i) {
 			int j = random.nextInt(i);
-			String letter = ((Button) bt[i]).getText().toString();
-			bt[i].setText(((Button) bt[j]).getText().toString());
-			bt[j].setText(letter);
+			String letter = (tv[i].getText().toString());
+			tv[i].setText(tv[j].getText().toString());
+			tv[j].setText(letter);
 		}
 	}
 
 	@TargetApi(Build.VERSION_CODES.HONEYCOMB)
 	@SuppressLint("NewApi")
 	public void createNotification() {
-
 		Notification.Builder nb = new Notification.Builder(
 				getApplicationContext());
 		Intent i = new Intent(getApplicationContext(), MainActivity.class);
@@ -342,12 +315,4 @@ public class MainActivity extends Activity implements OnClickListener {
 						"BubblePopper game has been paused, press to restart game");
 		nm.notify(123, nb.build());
 	}
-
-	/*
-	 * public static void hideSoftKeyboard(Activity activity) {
-	 * InputMethodManager inputMethodManager = (InputMethodManager) activity
-	 * .getSystemService(Activity.INPUT_METHOD_SERVICE);
-	 * inputMethodManager.hideSoftInputFromWindow(activity.getCurrentFocus()
-	 * .getWindowToken(), 0); }
-	 */
 }
