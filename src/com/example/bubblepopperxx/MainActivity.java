@@ -2,6 +2,7 @@ package com.example.bubblepopperxx;
 
 import java.security.SecureRandom;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.locks.ReentrantLock;
 
 import android.annotation.SuppressLint;
@@ -37,8 +38,16 @@ public class MainActivity extends Activity implements OnClickListener {
 	public Toast toast;
 	public Handler mainHandler;
 	public LinearLayout lLayout;
-	public volatile ArrayList<String> rList;
-	public volatile ArrayList<Integer> xPos;
+	public volatile List<Letter> letterList;
+	public volatile Letter letter;/*
+								 * public volatile ArrayList<String> rList;
+								 * public volatile ArrayList<Integer> xPos;
+								 * public volatile ArrayList<Integer> yPos;
+								 * public volatile ArrayList<Integer> x; public
+								 * volatile ArrayList<Integer> y;
+								 */
+	// public volatile ArrayList<String> delList;
+	// public volatile ArrayList<Integer> delIndexes;
 	public static final int numberOfAlphabets = 26;
 	public volatile int maxErrors = 10;
 	public volatile boolean isRunning = true;
@@ -53,6 +62,11 @@ public class MainActivity extends Activity implements OnClickListener {
 	public static final String[] charset = { "A", "B", "C", "D", "E", "F", "G",
 			"H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T",
 			"U", "V", "W", "X", "Y", "Z" };
+	public static final Integer[] xCords = { 0, 10, 20, 30, 40, 50, 60, 70, 80,
+			90, 100, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 210, 220 };
+	public static volatile Integer[] yCords = { 0, 10, 20, 30, 40, 50, 60, 70,
+			80, 90, 100, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 210,
+			220, 230, 240, 250, 260, 270, 280 };
 	public SoundPool soundpool;
 	public ReentrantLock globalLock;
 
@@ -103,29 +117,55 @@ public class MainActivity extends Activity implements OnClickListener {
 			displayToast("wrong...");
 		} else {
 			score++;
-			displayToast(rList.get(index).toString().trim() + " removed...");
+			displayToast(letterList.get(index).item.toString().trim()
+					+ " removed...");
 			updateSurface(index);
+			// Alternate approach 1
+			/*
+			 * isRunning=false; delList.add(rList.get(index)); isRunning=true;
+			 */
+
+			// Alternate approach 2
+			/*
+			 * isRunning=false; delIndexes.add(index); isRunning=true;
+			 */
 		}
 	}
 
 	public int check(String character) {
-		return (rList.indexOf(character));
+		for (int i = 0; i < letterList.size(); ++i) {
+			if (letterList.get(i).item.equals(character))
+				return i;
+		}
+		return (-1);
 	}
 
 	public void updateSurface(int index) {
 		isRunning = false;
-		synchronized (rList) {
-			rList.remove(index);
-		}
-		synchronized (xPos) {
-			xPos.remove(index);
+		{/*
+		 * rList.remove(index); xPos.remove(index); yPos.remove(index);
+		 * x.remove(index); y.remove(index);
+		 */
+			letterList.remove(index);
 		}
 		isRunning = true;
 	}
 
 	public void createAndDisplaySurface() {
-		rList = new ArrayList<String>();
-		xPos = new ArrayList<Integer>();
+		/*
+		 * rList = new ArrayList<String>(); xPos = new ArrayList<Integer>();
+		 * yPos = new ArrayList<Integer>(); x = new ArrayList<Integer>(); y =
+		 * new ArrayList<Integer>();
+		 */
+		letterList = new ArrayList<Letter>();
+		/*
+		 * Alternate approach 1 delList=new ArrayList<String>();
+		 */
+
+		/*
+		 * Alternate approach 2 delIndexes=new ArrayList<Integer>();
+		 */
+
 		random = new SecureRandom();
 		displayToast("starting....");
 		score = total = errors = 0;
@@ -139,30 +179,41 @@ public class MainActivity extends Activity implements OnClickListener {
 
 		public SurfaceHolder sfh;
 		public Canvas canvas;
-		public Paint paint;
-		public int yPos;
+		public Paint paintTrue, paintFalse, paint;
+		// public int yPos;
 		public ReentrantLock lock;
 
 		public AnimationSurface(Context context) {
 			super(context);
 			// TODO Auto-generated constructor stub
 			sfh = getHolder();
-			paint = new Paint();
-			paint.setColor(Color.WHITE);
-			paint.setAntiAlias(true);
-			paint.setTextSize(15);
+			paintTrue = new Paint();
+			paintTrue.setColor(Color.WHITE);
+			paintTrue.setAntiAlias(true);
+			paintTrue.setTextSize(40);
+
+			paintFalse = new Paint();
+			paintFalse.setColor(Color.RED);
+			paintFalse.setAntiAlias(true);
+			paintFalse.setTextSize(60);
 			sfh.addCallback(this);
-			lock = new ReentrantLock();
+
 		}
 
 		public AnimationSurface(Context context, AttributeSet attrs) {
 			super(context, attrs);
 			// TODO Auto-generated constructor stub
 			sfh = getHolder();
-			paint = new Paint();
-			paint.setColor(Color.WHITE);
-			paint.setAntiAlias(true);
-			paint.setTextSize(30);
+			paintTrue = new Paint();
+			paintTrue.setColor(Color.WHITE);
+			paintTrue.setAntiAlias(true);
+			paintTrue.setTextSize(40);
+
+			paintFalse = new Paint();
+			paintFalse.setColor(Color.RED);
+			paintFalse.setAntiAlias(true);
+			paintFalse.setTextSize(60);
+
 			sfh.addCallback(this);
 		}
 
@@ -207,9 +258,19 @@ public class MainActivity extends Activity implements OnClickListener {
 
 					while (!isRunning)
 						;
+					/*
+					 * Alternate approach 1 for(Integer index:delIndexes) {
+					 * rList.remove(index); xPos.remove(index);
+					 * delIndexes.remove(index); }
+					 */
+					/*
+					 * Alternate approach 2 for(String item:delList) {
+					 * xPos.remove(rList.indexOf(item)); rList.remove(item);
+					 * delList.remove(item); }
+					 */
+					letter = new Letter(produceRandomCharacter());
+					letterList.add(letter);
 
-					rList.add(produceRandomCharacter());
-					xPos.add(0);
 					++total;
 					mainHandler.post(new Runnable() {
 						@Override
@@ -220,7 +281,6 @@ public class MainActivity extends Activity implements OnClickListener {
 						}
 					});
 
-					yPos = 0;
 					canvas = sfh.lockCanvas();
 					canvas.drawRGB(0, 0, 0);
 					if (errors >= maxErrors) {
@@ -230,25 +290,53 @@ public class MainActivity extends Activity implements OnClickListener {
 									"you did 10 errors you lose........", 0,
 									canvas.getHeight() / 2, paint);
 							shutDown = true;
-							sfh.unlockCanvasAndPost(canvas);
-							Thread.sleep(2000);
-						} catch (InterruptedException e) {
-							// TODO Auto-generated catch block
-							e.printStackTrace();
+
 						} finally {
+							sfh.unlockCanvasAndPost(canvas);
+							try {
+								Thread.sleep(2000);
+							} catch (InterruptedException e) {
+								// TODO Auto-generated catch block
+								e.printStackTrace();
+							}
 							finish();
 							continue;
 						}
 					}
-					for (int i = 0; i < rList.size(); ++i) {
-						if (!setPosition(i)) {
-							rList.remove(i);
-							xPos.remove(i);
-						}
-						canvas.drawText(rList.get(i), xPos.get(i), yPos, paint);
-					}
 					sfh.unlockCanvasAndPost(canvas);
 
+					for (int i = 0; i < letterList.size(); ++i) {
+						if (letterList.get(i).colorBit == false) {
+							letterList.remove(i);
+							--i;
+							continue;
+						} else
+							setPosition(i);
+						
+						if ((letterList.get(i).x+letterList.get(i).xPos) > xCords[xCords.length-1])
+						 {
+							paint = new Paint(paintFalse);
+							letterList.get(i).colorBit = false;
+						} else
+							paint = new Paint(paintTrue);
+					}
+
+					for (int a = 0; a < 10; ++a) {
+						canvas = sfh.lockCanvas();
+						canvas.drawRGB(0, 0, 0);
+						for (int i = 0; i < letterList.size(); ++i) {
+
+							final int dx = 4;
+							final int dy = letterList.get(i).yPos / 10;
+							letterList.get(i).x += dx;
+							letterList.get(i).y += dy;
+
+							canvas.drawText(letterList.get(i).item,
+									letterList.get(i).x, letterList.get(i).y,
+									paint);
+						}
+						sfh.unlockCanvasAndPost(canvas);
+					}
 					try {
 						Thread.sleep(2000);
 					} catch (InterruptedException e) {
@@ -257,15 +345,17 @@ public class MainActivity extends Activity implements OnClickListener {
 					}
 				}
 			}
+		}
 
-			public boolean setPosition(int i) {
-				if (xPos.get(i) >= (canvas.getWidth() - 20))
-					return false;
+		public void setPosition(int i) {
+		//	int newX = xCords[random.nextInt(xCords.length)];
+			int newY = yCords[random.nextInt(yCords.length)];
+		//	int newY=random.nextInt(canvas.getHeight());
+		//	int oldX = letterList.get(i).xPos;
+			int oldY = letterList.get(i).yPos;
 
-				xPos.set(i, xPos.get(i) + 20);
-				yPos = random.nextInt(canvas.getHeight() - 40) + 20;
-				return true;
-			}
+	//		letterList.get(i).xPos = newX - oldX;
+			letterList.get(i).yPos = newY - oldY;
 		}
 	}
 
