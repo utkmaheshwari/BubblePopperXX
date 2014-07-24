@@ -16,7 +16,6 @@ import android.content.Intent;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
-import android.media.SoundPool;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -41,8 +40,8 @@ public class MainActivity extends Activity implements OnClickListener {
 	public volatile List<Letter> letterList;
 	public volatile Letter letter;/*
 								 * public volatile ArrayList<String> rList;
-								 * public volatile ArrayList<Integer> xPos;
-								 * public volatile ArrayList<Integer> yPos;
+								 * public volatile ArrayList<Integer> xToMove;
+								 * public volatile ArrayList<Integer> yToMove;
 								 * public volatile ArrayList<Integer> x; public
 								 * volatile ArrayList<Integer> y;
 								 */
@@ -62,13 +61,15 @@ public class MainActivity extends Activity implements OnClickListener {
 	public static final String[] charset = { "A", "B", "C", "D", "E", "F", "G",
 			"H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T",
 			"U", "V", "W", "X", "Y", "Z" };
-	public static final Integer[] xCords = { 0, 10, 20, 30, 40, 50, 60, 70, 80,
-			90, 100, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 210, 220 };
-	public static volatile Integer[] yCords = { 0, 10, 20, 30, 40, 50, 60, 70,
-			80, 90, 100, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 210,
-			220, 230, 240, 250, 260, 270, 280 };
-	public SoundPool soundpool;
-	public ReentrantLock globalLock;
+
+	public volatile ArrayList<Integer> xDistance/*
+												 * = { 0, 10, 20, 30, 40, 50,
+												 * 60, 70, 80, 90, 100, 110,
+												 * 120, 130, 140, 150, 160, 170,
+												 * 180, 190, 200, 210, 220 }
+												 */;
+	public volatile ArrayList<Integer> yDistance;
+	public volatile static int width, height;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -77,6 +78,12 @@ public class MainActivity extends Activity implements OnClickListener {
 		setUIComponents();
 		mainHandler = new Handler();
 		createAndDisplaySurface();
+	}
+
+	@Override
+	public void onWindowFocusChanged(boolean hasFocus) {
+
+		// displayToast(height + " " + width);
 	}
 
 	public void setUIComponents() {
@@ -143,7 +150,7 @@ public class MainActivity extends Activity implements OnClickListener {
 	public void updateSurface(int index) {
 		isRunning = false;
 		{/*
-		 * rList.remove(index); xPos.remove(index); yPos.remove(index);
+		 * rList.remove(index); xToMove.remove(index); yToMove.remove(index);
 		 * x.remove(index); y.remove(index);
 		 */
 			letterList.remove(index);
@@ -153,11 +160,13 @@ public class MainActivity extends Activity implements OnClickListener {
 
 	public void createAndDisplaySurface() {
 		/*
-		 * rList = new ArrayList<String>(); xPos = new ArrayList<Integer>();
-		 * yPos = new ArrayList<Integer>(); x = new ArrayList<Integer>(); y =
+		 * rList = new ArrayList<String>(); xToMove = new ArrayList<Integer>();
+		 * yToMove = new ArrayList<Integer>(); x = new ArrayList<Integer>(); y =
 		 * new ArrayList<Integer>();
 		 */
 		letterList = new ArrayList<Letter>();
+		xDistance = new ArrayList<Integer>();
+		yDistance = new ArrayList<Integer>();
 		/*
 		 * Alternate approach 1 delList=new ArrayList<String>();
 		 */
@@ -180,7 +189,7 @@ public class MainActivity extends Activity implements OnClickListener {
 		public SurfaceHolder sfh;
 		public Canvas canvas;
 		public Paint paintTrue, paintFalse, paint;
-		// public int yPos;
+		// public int yToMove;
 		public ReentrantLock lock;
 
 		public AnimationSurface(Context context) {
@@ -195,9 +204,9 @@ public class MainActivity extends Activity implements OnClickListener {
 			paintFalse = new Paint();
 			paintFalse.setColor(Color.RED);
 			paintFalse.setAntiAlias(true);
-			paintFalse.setTextSize(60);
-			sfh.addCallback(this);
+			paintFalse.setTextSize(40);
 
+			sfh.addCallback(this);
 		}
 
 		public AnimationSurface(Context context, AttributeSet attrs) {
@@ -212,9 +221,18 @@ public class MainActivity extends Activity implements OnClickListener {
 			paintFalse = new Paint();
 			paintFalse.setColor(Color.RED);
 			paintFalse.setAntiAlias(true);
-			paintFalse.setTextSize(60);
+			paintFalse.setTextSize(40);
 
 			sfh.addCallback(this);
+		}
+
+		@Override
+		protected void onSizeChanged(int w, int h, int oldw, int oldh) {
+			// TODO Auto-generated method stub
+			super.onSizeChanged(w, h, oldw, oldh);
+			width = w / 10;
+			height = h / 10;
+
 		}
 
 		@Override
@@ -224,9 +242,24 @@ public class MainActivity extends Activity implements OnClickListener {
 
 		}
 
+		@TargetApi(Build.VERSION_CODES.JELLY_BEAN)
+		@SuppressLint("NewApi")
 		@Override
 		public void surfaceCreated(SurfaceHolder holder) {
 			// TODO Auto-generated method stub
+			/*
+			 * Canvas c=sfh.lockCanvas(); int width = c.getWidth() / 10 + 1; int
+			 * height = c.getHeight() / 10; sfh.unlockCanvasAndPost(c);
+			 * xDistance = new Integer[width]; yDistance = new Integer[height];
+			 * for (int i = 1; i <= width; ++i) xDistance[i - 1] = width * i;
+			 * for (int i = 1; i <= height; ++i) yDistance[i - 1] = height * i;
+			 */
+
+			for (int i = 10; i <= width * 2; i += 10)
+				xDistance.add(i);
+			for (int i = -(height * 5); i <= (height * 15); i += 10)
+				yDistance.add(i);
+
 			t = new Thread(new ThreadWorker());
 			t.start();
 		}
@@ -252,6 +285,7 @@ public class MainActivity extends Activity implements OnClickListener {
 			@Override
 			public void run() {
 				// TODO Auto-generated method stub
+
 				while (true) {
 					if (shutDown)
 						break;
@@ -260,15 +294,15 @@ public class MainActivity extends Activity implements OnClickListener {
 						;
 					/*
 					 * Alternate approach 1 for(Integer index:delIndexes) {
-					 * rList.remove(index); xPos.remove(index);
+					 * rList.remove(index); xToMove.remove(index);
 					 * delIndexes.remove(index); }
 					 */
 					/*
 					 * Alternate approach 2 for(String item:delList) {
-					 * xPos.remove(rList.indexOf(item)); rList.remove(item);
+					 * xToMove.remove(rList.indexOf(item)); rList.remove(item);
 					 * delList.remove(item); }
 					 */
-					letter = new Letter(produceRandomCharacter());
+					letter = new Letter(produceRandomCharacter(), (height * 5));
 					letterList.add(letter);
 
 					++total;
@@ -278,11 +312,13 @@ public class MainActivity extends Activity implements OnClickListener {
 							// TODO Auto-generated method stub
 							keyboardRandomizer();
 							tvScore.setText(score + " / " + total);
+
 						}
 					});
 
 					canvas = sfh.lockCanvas();
 					canvas.drawRGB(0, 0, 0);
+
 					if (errors >= maxErrors) {
 
 						try {
@@ -312,9 +348,8 @@ public class MainActivity extends Activity implements OnClickListener {
 							continue;
 						} else
 							setPosition(i);
-						
-						if ((letterList.get(i).x+letterList.get(i).xPos) > xCords[xCords.length-1])
-						 {
+
+						if ((letterList.get(i).xPos+letterList.get(i).xToMove) > (width * 8)) {
 							paint = new Paint(paintFalse);
 							letterList.get(i).colorBit = false;
 						} else
@@ -326,19 +361,26 @@ public class MainActivity extends Activity implements OnClickListener {
 						canvas.drawRGB(0, 0, 0);
 						for (int i = 0; i < letterList.size(); ++i) {
 
-							final int dx = 4;
-							final int dy = letterList.get(i).yPos / 10;
-							letterList.get(i).x += dx;
-							letterList.get(i).y += dy;
+							final int dx = letterList.get(i).xToMove / 10;
+							final int dy = letterList.get(i).yToMove / 10;
+							letterList.get(i).xPos += dx;
+							letterList.get(i).yPos += dy;
 
+							if (letterList.get(i).yPos >= (int) (height * 9)) {
+								letterList.get(i).yPos = (int) (height * 2);
+							}
+
+							if (letterList.get(i).yPos <= (int) (height * 1.5)) {
+								letterList.get(i).yPos = (int) (height * 8.5);
+							}
 							canvas.drawText(letterList.get(i).item,
-									letterList.get(i).x, letterList.get(i).y,
-									paint);
+									letterList.get(i).xPos,
+									letterList.get(i).yPos, paint);
 						}
 						sfh.unlockCanvasAndPost(canvas);
 					}
 					try {
-						Thread.sleep(2000);
+						Thread.sleep(1000);
 					} catch (InterruptedException e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
@@ -348,19 +390,14 @@ public class MainActivity extends Activity implements OnClickListener {
 		}
 
 		public void setPosition(int i) {
-		//	int newX = xCords[random.nextInt(xCords.length)];
-			int newY = yCords[random.nextInt(yCords.length)];
-		//	int newY=random.nextInt(canvas.getHeight());
-		//	int oldX = letterList.get(i).xPos;
-			int oldY = letterList.get(i).yPos;
-
-	//		letterList.get(i).xPos = newX - oldX;
-			letterList.get(i).yPos = newY - oldY;
+			letterList.get(i).yToMove = yDistance.get(random.nextInt(yDistance
+					.size()));
+			letterList.get(i).xToMove = xDistance.get(random.nextInt(xDistance
+					.size()));
 		}
 	}
 
 	public void displayToast(final String result) {
-		// TODO Auto-generated method stub
 		toast = Toast.makeText(getApplicationContext(), result,
 				Toast.LENGTH_SHORT);
 		toast.setGravity(Gravity.TOP | Gravity.RIGHT, 0, 0);
@@ -372,7 +409,8 @@ public class MainActivity extends Activity implements OnClickListener {
 				// TODO Auto-generated method stub
 				toast.cancel();
 			}
-		}, 800);
+		}, 200);
+
 	}
 
 	public String produceRandomCharacter() {

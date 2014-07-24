@@ -2,12 +2,13 @@ package com.example.bubblepopperxx;
 
 public class Letter {
 	public String item;
-	public int xPos, yPos, x, y;
+	public int xToMove, yToMove, xPos, yPos;
 	public boolean colorBit;
 
-	public Letter(String l) {
+	public Letter(String l,int middle) {
 		item = l;
-		xPos = yPos = x = y = 0;
+		xToMove = yToMove = xPos = 0;
+		this.yPos=middle;
 		colorBit = true;
 	}
 }
