@@ -349,11 +349,9 @@ public class MainActivity extends Activity implements OnClickListener {
 						} else
 							setPosition(i);
 
-						if ((letterList.get(i).xPos+letterList.get(i).xToMove) > (width * 8)) {
-							paint = new Paint(paintFalse);
+						if ((letterList.get(i).xPos + letterList.get(i).xToMove) > (width * 9)) {
 							letterList.get(i).colorBit = false;
-						} else
-							paint = new Paint(paintTrue);
+						} 
 					}
 
 					for (int a = 0; a < 10; ++a) {
@@ -373,6 +371,12 @@ public class MainActivity extends Activity implements OnClickListener {
 							if (letterList.get(i).yPos <= (int) (height * 1.5)) {
 								letterList.get(i).yPos = (int) (height * 8.5);
 							}
+							
+							if(letterList.get(i).colorBit==false)
+								paint=new Paint(paintFalse);
+							else
+								paint=new Paint(paintTrue);
+							
 							canvas.drawText(letterList.get(i).item,
 									letterList.get(i).xPos,
 									letterList.get(i).yPos, paint);
@@ -380,7 +384,7 @@ public class MainActivity extends Activity implements OnClickListener {
 						sfh.unlockCanvasAndPost(canvas);
 					}
 					try {
-						Thread.sleep(1000);
+						Thread.sleep(1500);
 					} catch (InterruptedException e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
