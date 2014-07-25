@@ -16,6 +16,8 @@ import android.content.Intent;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.media.AudioManager;
+import android.media.SoundPool;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -48,7 +50,7 @@ public class MainActivity extends Activity implements OnClickListener {
 	// public volatile ArrayList<String> delList;
 	// public volatile ArrayList<Integer> delIndexes;
 	public static final int numberOfAlphabets = 26;
-	public volatile int maxErrors = 10;
+	public volatile int maxErrors = 7;
 	public volatile boolean isRunning = true;
 	public volatile boolean shutDown = false;
 	public volatile int checkResult = -1;
@@ -70,12 +72,16 @@ public class MainActivity extends Activity implements OnClickListener {
 												 */;
 	public volatile ArrayList<Integer> yDistance;
 	public volatile static int width, height;
+	public volatile SoundPool beepSound;
+	public int beepSoundId;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
 		setUIComponents();
+		beepSound = new SoundPool(5, AudioManager.STREAM_MUSIC, 0);
+		beepSoundId = beepSound.load(getApplicationContext(), R.raw.beep, 1); 
 		mainHandler = new Handler();
 		createAndDisplaySurface();
 	}
@@ -269,6 +275,8 @@ public class MainActivity extends Activity implements OnClickListener {
 			// TODO Auto-generated method stub
 			shutDown = true;
 			sfh.removeCallback(this);
+			beepSound.stop(beepSoundId);
+			beepSound.release();
 		}
 
 		@TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
@@ -285,7 +293,10 @@ public class MainActivity extends Activity implements OnClickListener {
 			@Override
 			public void run() {
 				// TODO Auto-generated method stub
-
+				
+			//	beepSound.setLoop(beepSoundId, -1);
+				
+				
 				while (true) {
 					if (shutDown)
 						break;
@@ -302,6 +313,8 @@ public class MainActivity extends Activity implements OnClickListener {
 					 * xToMove.remove(rList.indexOf(item)); rList.remove(item);
 					 * delList.remove(item); }
 					 */
+					
+					
 					letter = new Letter(produceRandomCharacter(), (height * 5));
 					letterList.add(letter);
 
@@ -323,7 +336,7 @@ public class MainActivity extends Activity implements OnClickListener {
 
 						try {
 							canvas.drawText(
-									"you did 10 errors you lose........", 0,
+									"you did "+maxErrors+" errors you lose........", 0,
 									canvas.getHeight() / 2, paint);
 							shutDown = true;
 
@@ -351,7 +364,7 @@ public class MainActivity extends Activity implements OnClickListener {
 
 						if ((letterList.get(i).xPos + letterList.get(i).xToMove) > (width * 9)) {
 							letterList.get(i).colorBit = false;
-						} 
+						}
 					}
 
 					for (int a = 0; a < 10; ++a) {
@@ -371,23 +384,33 @@ public class MainActivity extends Activity implements OnClickListener {
 							if (letterList.get(i).yPos <= (int) (height * 1.5)) {
 								letterList.get(i).yPos = (int) (height * 8.5);
 							}
-							
-							if(letterList.get(i).colorBit==false)
-								paint=new Paint(paintFalse);
+
+							if (letterList.get(i).colorBit == false)
+								paint = new Paint(paintFalse);
 							else
-								paint=new Paint(paintTrue);
-							
+								paint = new Paint(paintTrue);
+
 							canvas.drawText(letterList.get(i).item,
 									letterList.get(i).xPos,
 									letterList.get(i).yPos, paint);
+							try {
+								Thread.sleep(2);
+							} catch (InterruptedException e) {
+								// TODO Auto-generated catch block
+								e.printStackTrace();
+							}
 						}
 						sfh.unlockCanvasAndPost(canvas);
 					}
 					try {
+						beepSound.play(beepSoundId, 5, 5, 0, 0, (float) 1.5);
 						Thread.sleep(1500);
 					} catch (InterruptedException e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
+					}
+					finally{
+						beepSound.stop(beepSoundId);
 					}
 				}
 			}
