@@ -20,6 +20,7 @@ import android.media.AudioManager;
 import android.media.SoundPool;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.CountDownTimer;
 import android.os.Handler;
 import android.util.AttributeSet;
 import android.view.Gravity;
@@ -35,20 +36,12 @@ import android.widget.Toast;
 public class MainActivity extends Activity implements OnClickListener {
 
 	public TextView tv[];
-	public TextView tvScore, tvTime, tvLevel;
+	public TextView tvScore, tvTime, tvBack, tvWord;
 	public Toast toast;
 	public Handler mainHandler;
 	public LinearLayout lLayout;
-	public volatile List<Letter> letterList;
-	public volatile Letter letter;/*
-								 * public volatile ArrayList<String> rList;
-								 * public volatile ArrayList<Integer> xToMove;
-								 * public volatile ArrayList<Integer> yToMove;
-								 * public volatile ArrayList<Integer> x; public
-								 * volatile ArrayList<Integer> y;
-								 */
-	// public volatile ArrayList<String> delList;
-	// public volatile ArrayList<Integer> delIndexes;
+	public volatile List<Letter> wordList;
+	public volatile Letter letter;
 	public static final int numberOfAlphabets = 26;
 	public volatile int maxErrors = 7;
 	public volatile boolean isRunning = true;
@@ -64,32 +57,22 @@ public class MainActivity extends Activity implements OnClickListener {
 			"H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T",
 			"U", "V", "W", "X", "Y", "Z" };
 
-	public volatile ArrayList<Integer> xDistance/*
-												 * = { 0, 10, 20, 30, 40, 50,
-												 * 60, 70, 80, 90, 100, 110,
-												 * 120, 130, 140, 150, 160, 170,
-												 * 180, 190, 200, 210, 220 }
-												 */;
+	public volatile ArrayList<Integer> xDistance;
 	public volatile ArrayList<Integer> yDistance;
+	public volatile ArrayList<Integer> distance;
 	public volatile static int width, height;
 	public volatile SoundPool beepSound;
 	public int beepSoundId;
+	public volatile String ans = "";
+	public volatile CountDownTimer cdTimer;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
 		setUIComponents();
-		beepSound = new SoundPool(5, AudioManager.STREAM_MUSIC, 0);
-		beepSoundId = beepSound.load(getApplicationContext(), R.raw.beep, 1); 
-		mainHandler = new Handler();
+		setUpExtraPeripherals();
 		createAndDisplaySurface();
-	}
-
-	@Override
-	public void onWindowFocusChanged(boolean hasFocus) {
-
-		// displayToast(height + " " + width);
 	}
 
 	public void setUIComponents() {
@@ -108,46 +91,68 @@ public class MainActivity extends Activity implements OnClickListener {
 			tv[i].setOnClickListener(this);
 		}
 
-		tvLevel = (TextView) findViewById(R.id.level);
-		// tvTime = (TextView) findViewById(R.id.time);
-		tvScore = (TextView) findViewById(R.id.score);
+		tvWord = (TextView) findViewById(R.id.tvWord);
+		tvTime = (TextView) findViewById(R.id.tvTime);
+		tvBack = (TextView) findViewById(R.id.tvBack);
+		tvScore = (TextView) findViewById(R.id.tvScore);
+
+		tvBack.setOnClickListener(this);
+
 		nm = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
 		nm.cancel(123);
+	}
+
+	public void setUpExtraPeripherals() {
+		beepSound = new SoundPool(5, AudioManager.STREAM_MUSIC, 0);
+		beepSoundId = beepSound.load(getApplicationContext(), R.raw.beep, 1);
+		mainHandler = new Handler();
+		cdTimer = new CountDownTimer(180000, 1000) {
+
+			public void onTick(long millisUntilFinished) {
+				long secs = millisUntilFinished / 1000;
+				tvTime.setText((secs / 60) + " : " + (secs % 60));
+			}
+
+			public void onFinish() {
+				shutDown = true;
+			}
+		};
 	}
 
 	@Override
 	public void onClick(View v) {
 		// TODO Auto-generated method stub
-		// soundpool.play(soundID, leftVolume, rightVolume, priority, loop,
-		// rate);
-		TextView tvX = (TextView) v;
-		actionAfterChecking(check(tvX.getText().toString()));
+
+		if (v.getId() == R.id.tvBack) {
+			int length = ans.length();
+			if (length == 0)
+				return;
+			ans = ans.substring(0, length - 1);
+		} else {
+			TextView tvX = (TextView) v;
+			ans = ans + tvX.getText().toString();
+		}
+		tvWord.setText(ans);
+		actionAfterChecking(check(tvWord.getText().toString()));
+
+		keyboardRandomizer();
 	}
 
 	private void actionAfterChecking(int index) {
 		if (index == (-1)) {
-			++errors;
-			displayToast("wrong...");
 		} else {
 			score++;
-			displayToast(letterList.get(index).item.toString().trim()
+			tvWord.setText("");
+			ans = "";
+			displayToast(wordList.get(index).item.toString().trim()
 					+ " removed...");
 			updateSurface(index);
-			// Alternate approach 1
-			/*
-			 * isRunning=false; delList.add(rList.get(index)); isRunning=true;
-			 */
-
-			// Alternate approach 2
-			/*
-			 * isRunning=false; delIndexes.add(index); isRunning=true;
-			 */
 		}
 	}
 
 	public int check(String character) {
-		for (int i = 0; i < letterList.size(); ++i) {
-			if (letterList.get(i).item.equals(character))
+		for (int i = 0; i < wordList.size(); ++i) {
+			if (wordList.get(i).item.equals(character))
 				return i;
 		}
 		return (-1);
@@ -155,31 +160,17 @@ public class MainActivity extends Activity implements OnClickListener {
 
 	public void updateSurface(int index) {
 		isRunning = false;
-		{/*
-		 * rList.remove(index); xToMove.remove(index); yToMove.remove(index);
-		 * x.remove(index); y.remove(index);
-		 */
-			letterList.remove(index);
+		{
+			wordList.remove(index);
 		}
 		isRunning = true;
+
 	}
 
 	public void createAndDisplaySurface() {
-		/*
-		 * rList = new ArrayList<String>(); xToMove = new ArrayList<Integer>();
-		 * yToMove = new ArrayList<Integer>(); x = new ArrayList<Integer>(); y =
-		 * new ArrayList<Integer>();
-		 */
-		letterList = new ArrayList<Letter>();
+		wordList = new ArrayList<Letter>();
 		xDistance = new ArrayList<Integer>();
 		yDistance = new ArrayList<Integer>();
-		/*
-		 * Alternate approach 1 delList=new ArrayList<String>();
-		 */
-
-		/*
-		 * Alternate approach 2 delIndexes=new ArrayList<Integer>();
-		 */
 
 		random = new SecureRandom();
 		displayToast("starting....");
@@ -187,6 +178,7 @@ public class MainActivity extends Activity implements OnClickListener {
 		lLayout.addView(new AnimationSurface(getApplicationContext()), 0,
 				new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
 						ViewGroup.LayoutParams.MATCH_PARENT));
+
 	}
 
 	class AnimationSurface extends SurfaceView implements
@@ -194,7 +186,7 @@ public class MainActivity extends Activity implements OnClickListener {
 
 		public SurfaceHolder sfh;
 		public Canvas canvas;
-		public Paint paintTrue, paintFalse, paint;
+		public Paint paint0, paint1, paint, paint2;
 		// public int yToMove;
 		public ReentrantLock lock;
 
@@ -202,15 +194,15 @@ public class MainActivity extends Activity implements OnClickListener {
 			super(context);
 			// TODO Auto-generated constructor stub
 			sfh = getHolder();
-			paintTrue = new Paint();
-			paintTrue.setColor(Color.WHITE);
-			paintTrue.setAntiAlias(true);
-			paintTrue.setTextSize(40);
+			paint0 = new Paint();
+			paint0.setColor(Color.WHITE);
+			paint0.setAntiAlias(true);
+			paint0.setTextSize(40);
 
-			paintFalse = new Paint();
-			paintFalse.setColor(Color.RED);
-			paintFalse.setAntiAlias(true);
-			paintFalse.setTextSize(40);
+			paint1 = new Paint();
+			paint1.setColor(Color.RED);
+			paint1.setAntiAlias(true);
+			paint1.setTextSize(40);
 
 			sfh.addCallback(this);
 		}
@@ -219,15 +211,15 @@ public class MainActivity extends Activity implements OnClickListener {
 			super(context, attrs);
 			// TODO Auto-generated constructor stub
 			sfh = getHolder();
-			paintTrue = new Paint();
-			paintTrue.setColor(Color.WHITE);
-			paintTrue.setAntiAlias(true);
-			paintTrue.setTextSize(40);
+			paint0 = new Paint();
+			paint0.setColor(Color.BLUE);
+			paint0.setAntiAlias(true);
+			paint0.setTextSize(40);
 
-			paintFalse = new Paint();
-			paintFalse.setColor(Color.RED);
-			paintFalse.setAntiAlias(true);
-			paintFalse.setTextSize(40);
+			paint1 = new Paint();
+			paint1.setColor(Color.RED);
+			paint1.setAntiAlias(true);
+			paint1.setTextSize(40);
 
 			sfh.addCallback(this);
 		}
@@ -253,17 +245,9 @@ public class MainActivity extends Activity implements OnClickListener {
 		@Override
 		public void surfaceCreated(SurfaceHolder holder) {
 			// TODO Auto-generated method stub
-			/*
-			 * Canvas c=sfh.lockCanvas(); int width = c.getWidth() / 10 + 1; int
-			 * height = c.getHeight() / 10; sfh.unlockCanvasAndPost(c);
-			 * xDistance = new Integer[width]; yDistance = new Integer[height];
-			 * for (int i = 1; i <= width; ++i) xDistance[i - 1] = width * i;
-			 * for (int i = 1; i <= height; ++i) yDistance[i - 1] = height * i;
-			 */
-
-			for (int i = 10; i <= width * 2; i += 10)
+			for (int i = 100; i <= width * 2; i += 10)
 				xDistance.add(i);
-			for (int i = -(height * 5); i <= (height * 15); i += 10)
+			for (int i = -(height * 15); i <= (height * 15); i += 10)
 				yDistance.add(i);
 
 			t = new Thread(new ThreadWorker());
@@ -275,7 +259,7 @@ public class MainActivity extends Activity implements OnClickListener {
 			// TODO Auto-generated method stub
 			shutDown = true;
 			sfh.removeCallback(this);
-			beepSound.stop(beepSoundId);
+		//	beepSound.stop(beepSoundId);
 			beepSound.release();
 		}
 
@@ -293,50 +277,48 @@ public class MainActivity extends Activity implements OnClickListener {
 			@Override
 			public void run() {
 				// TODO Auto-generated method stub
-				
-			//	beepSound.setLoop(beepSoundId, -1);
-				
-				
+				cdTimer.start();
 				while (true) {
-					if (shutDown)
+					if (shutDown) {
+						canvas.drawText("you did " + maxErrors
+								+ " errors you lose........" + "\n"
+								+ "your score is " + score + " / " + total, 0,
+								canvas.getHeight() / 2, paint);
+
+						sfh.unlockCanvasAndPost(canvas);
+						try {
+							Thread.sleep(2000);
+						} catch (InterruptedException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+						finish();
 						break;
+					}
 
 					while (!isRunning)
 						;
-					/*
-					 * Alternate approach 1 for(Integer index:delIndexes) {
-					 * rList.remove(index); xToMove.remove(index);
-					 * delIndexes.remove(index); }
-					 */
-					/*
-					 * Alternate approach 2 for(String item:delList) {
-					 * xToMove.remove(rList.indexOf(item)); rList.remove(item);
-					 * delList.remove(item); }
-					 */
-					
-					
+
 					letter = new Letter(produceRandomCharacter(), (height * 5));
-					letterList.add(letter);
+					wordList.add(letter);
 
 					++total;
 					mainHandler.post(new Runnable() {
 						@Override
 						public void run() {
 							// TODO Auto-generated method stub
-							keyboardRandomizer();
 							tvScore.setText(score + " / " + total);
 
 						}
 					});
-
 					canvas = sfh.lockCanvas();
 					canvas.drawRGB(0, 0, 0);
 
 					if (errors >= maxErrors) {
 
 						try {
-							canvas.drawText(
-									"you did "+maxErrors+" errors you lose........", 0,
+							canvas.drawText("you did " + maxErrors
+									+ " errors you lose........", 0,
 									canvas.getHeight() / 2, paint);
 							shutDown = true;
 
@@ -353,73 +335,72 @@ public class MainActivity extends Activity implements OnClickListener {
 						}
 					}
 					sfh.unlockCanvasAndPost(canvas);
-
-					for (int i = 0; i < letterList.size(); ++i) {
-						if (letterList.get(i).colorBit == false) {
-							letterList.remove(i);
+					for (int i = 0; i < wordList.size(); ++i) {
+						if (wordList.get(i).colorCode == 1) {
+							wordList.remove(i);
 							--i;
+							score--;
 							continue;
 						} else
 							setPosition(i);
 
-						if ((letterList.get(i).xPos + letterList.get(i).xToMove) > (width * 9)) {
-							letterList.get(i).colorBit = false;
+						if ((wordList.get(i).xPos) > width * 7) {
+							wordList.get(i).colorCode = 1;
 						}
+
 					}
 
-					for (int a = 0; a < 10; ++a) {
+					for (int a = 0; a < 100; ++a) {
 						canvas = sfh.lockCanvas();
 						canvas.drawRGB(0, 0, 0);
-						for (int i = 0; i < letterList.size(); ++i) {
+						for (int i = 0; i < wordList.size(); ++i) {
 
-							final int dx = letterList.get(i).xToMove / 10;
-							final int dy = letterList.get(i).yToMove / 10;
-							letterList.get(i).xPos += dx;
-							letterList.get(i).yPos += dy;
+							final int dx = wordList.get(i).xToMove / 100;
+							final int dy = wordList.get(i).yToMove / 100;
+							wordList.get(i).xPos += dx;
+							wordList.get(i).yPos += dy;
 
-							if (letterList.get(i).yPos >= (int) (height * 9)) {
-								letterList.get(i).yPos = (int) (height * 2);
+							if (wordList.get(i).yPos > getHeight()) {
+								wordList.get(i).yPos = getHeight();
+								wordList.get(i).yToMove = -(wordList.get(i).yToMove - a
+										* dy);
 							}
 
-							if (letterList.get(i).yPos <= (int) (height * 1.5)) {
-								letterList.get(i).yPos = (int) (height * 8.5);
+							if (wordList.get(i).yPos < 30) {
+								wordList.get(i).yPos = 30;
+								wordList.get(i).yToMove = -(wordList.get(i).yToMove - a
+										* dy);
 							}
 
-							if (letterList.get(i).colorBit == false)
-								paint = new Paint(paintFalse);
-							else
-								paint = new Paint(paintTrue);
+							if (wordList.get(i).colorCode == 0)
+								paint = new Paint(paint0);
+							else if (wordList.get(i).colorCode == 1)
+								paint = new Paint(paint1);
 
-							canvas.drawText(letterList.get(i).item,
-									letterList.get(i).xPos,
-									letterList.get(i).yPos, paint);
-							try {
-								Thread.sleep(2);
-							} catch (InterruptedException e) {
-								// TODO Auto-generated catch block
-								e.printStackTrace();
-							}
+							canvas.drawText(wordList.get(i).item,
+									wordList.get(i).xPos, wordList.get(i).yPos,
+									paint);
+
 						}
 						sfh.unlockCanvasAndPost(canvas);
+						try {
+						//	beepSound
+							//		.play(beepSoundId, 5, 5, 0, 0, (float) 1.5);
+							Thread.sleep(10);
+						} catch (InterruptedException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
 					}
-					try {
-						beepSound.play(beepSoundId, 5, 5, 0, 0, (float) 1.5);
-						Thread.sleep(1500);
-					} catch (InterruptedException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
-					finally{
-						beepSound.stop(beepSoundId);
-					}
+					//beepSound.stop(beepSoundId);
 				}
 			}
 		}
 
 		public void setPosition(int i) {
-			letterList.get(i).yToMove = yDistance.get(random.nextInt(yDistance
+			wordList.get(i).yToMove = yDistance.get(random.nextInt(yDistance
 					.size()));
-			letterList.get(i).xToMove = xDistance.get(random.nextInt(xDistance
+			wordList.get(i).xToMove = xDistance.get(random.nextInt(xDistance
 					.size()));
 		}
 	}
@@ -441,7 +422,12 @@ public class MainActivity extends Activity implements OnClickListener {
 	}
 
 	public String produceRandomCharacter() {
-		return charset[random.nextInt(charset.length)];
+		int n = random.nextInt(2) + 3;
+		String s = "";
+		for (int i = 0; i < n; ++i) {
+			s = s + charset[random.nextInt(charset.length)];
+		}
+		return s;
 	}
 
 	public void keyboardRandomizer() {

@@ -4,5 +4,6 @@
     <string name="app_name">BubblePopperXX</string>
     <string name="action_settings">Settings</string>
     <string name="hello_world">Hello world!</string>
+    <string name="back">&lt;&lt;</string>
 
 </resources>

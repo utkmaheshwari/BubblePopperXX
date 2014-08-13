@@ -22,8 +22,8 @@
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
         android:layout_weight="3"
-        android:orientation="vertical" 
-        android:textColorHighlight="@android:color/transparent">
+        android:orientation="vertical"
+        android:textColorHighlight="@android:color/transparent" >
 
         <LinearLayout
             android:layout_width="fill_parent"
@@ -32,27 +32,39 @@
             android:weightSum="3" >
 
             <TextView
-                android:id="@+id/score"
+                android:id="@+id/tvScore"
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_horizontal"
                 android:layout_weight="1"
-                android:text="Score" />
+                android:text="0/0"
+                android:textAppearance="?android:attr/textAppearanceLarge" />
 
             <TextView
-                android:id="@+id/level"
+                android:id="@+id/tvTime"
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_horizontal"
-                android:layout_weight="2"
-                android:text="Level 1" />
+                android:layout_weight="1"
+                android:text="0:00"
+                android:textAlignment="center"
+                android:textAppearance="?android:attr/textAppearanceLarge" />
+
+            <TextView
+                android:id="@+id/tvWord"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_weight="1"
+                android:text="WORD"
+                android:textAppearance="?android:attr/textAppearanceLarge" />
         </LinearLayout>
 
         <LinearLayout
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
             android:layout_gravity="center_horizontal"
+            android:orientation="horizontal"
             android:weightSum="9" >
 
             <TextView
@@ -69,7 +81,6 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:text="W"
-                
                 android:textAppearance="?android:attr/textAppearanceLarge" />
 
             <TextView
@@ -134,7 +145,7 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal"
             android:orientation="horizontal"
-            android:weightSum="8" >
+            android:weightSum="9" >
 
             <TextView
                 android:id="@+id/tv10"
@@ -168,8 +179,6 @@
                 android:text="D"
                 android:textAppearance="?android:attr/textAppearanceLarge" />
 
-            
-
             <TextView
                 android:id="@+id/tv14"
                 android:layout_width="fill_parent"
@@ -201,6 +210,14 @@
                 android:layout_weight="1"
                 android:text="J"
                 android:textAppearance="?android:attr/textAppearanceLarge" />
+
+            <TextView
+                android:id="@+id/tvBack"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/back"
+                android:textAppearance="?android:attr/textAppearanceLarge" />
         </LinearLayout>
 
         <LinearLayout
@@ -209,7 +226,7 @@
             android:orientation="horizontal"
             android:weightSum="9" >
 
-           <TextView
+            <TextView
                 android:id="@+id/tv18"
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
@@ -224,8 +241,6 @@
                 android:layout_weight="1"
                 android:text="L"
                 android:textAppearance="?android:attr/textAppearanceLarge" />
-
-           
 
             <TextView
                 android:id="@+id/tv20"
@@ -266,14 +281,16 @@
                 android:layout_weight="1"
                 android:text="B"
                 android:textAppearance="?android:attr/textAppearanceLarge" />
-             <TextView
+
+            <TextView
                 android:id="@+id/tv25"
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:text="N"
                 android:textAppearance="?android:attr/textAppearanceLarge" />
-              <TextView
+
+            <TextView
                 android:id="@+id/tv26"
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
